@@ -512,9 +512,11 @@ export default function Nac_Main() {
       swal("แจ้งเตือน", 'กรุณาระบุ (ผู้ส่งมอบ/ชื่อ-นามสกุล ผู้ส่งมอบ)', "error")
     } else if ((serviceList.filter((res) => !res.assetsCode)[0]) !== undefined) {
       swal("แจ้งเตือน", 'กรุณาระบุข้อมูลทรัพย์สินให้ครบ', "error")
-    } else if (serviceList.filter((res) => !res.priceSeals)[0]) {
-      swal("แจ้งเตือน", 'กรุณาระบุราคาขาย', "error")
-    } else if ((serviceList.filter((res) => !res.image_1)[0]) !== undefined) {
+    }
+    // else if (serviceList.filter((res) => !res.priceSeals)[0] && sendHeader[0].status !=1) {
+    //   swal("แจ้งเตือน", 'กรุณาระบุราคาขาย', "error")
+    // } 
+    else if ((serviceList.filter((res) => !res.image_1)[0]) !== undefined) {
       swal("แจ้งเตือน", 'กรุณาใส่รูปภาพทรัพย์สิน', "error")
     }
     else {
@@ -598,9 +600,10 @@ export default function Nac_Main() {
       swal("แจ้งเตือน", 'กรุณาระบุ (ผู้ส่งมอบ/ชื่อ-นามสกุล ผู้ส่งมอบ)', "error")
     } else if ((serviceList.filter((res) => !res.assetsCode)[0]) !== undefined) {
       swal("แจ้งเตือน", 'กรุณาระบุข้อมูลทรัพย์สินให้ครบ', "error")
-    } else if ((serviceList.filter((res) => res.priceSeals === null)[0]) !== undefined) {
-      swal("แจ้งเตือน", 'กรุณาระบุราคาขาย', "error")
     }
+    // else if ((serviceList.filter((res) => res.priceSeals === null)[0])  && sendHeader[0].status !=1) {
+    //   swal("แจ้งเตือน", 'กรุณาระบุราคาขาย', "error")
+    // }
     else if ((serviceList.filter((res) => !res.bookValue)[0]) !== undefined) {
       swal("แจ้งเตือน", 'กรุณาระบุ Book Value', "error")
     } else if (approveData.filter((res) => res.workflowlevel !== 0 && data.UserCode === res.approverid)[0] || permission_MenuID.indexOf(9) > -1) {
@@ -608,7 +611,7 @@ export default function Nac_Main() {
       const reqUpdateStatus = {
         usercode: data.UserCode,
         nac_code: nac_code,
-        nac_status: approveData.filter((res) => res.workflowlevel != 0 && (res.limitamount < result))[0] ? 2 : 3,
+        nac_status: approveData.find(res => res.workflowlevel != 0 && res.limitamount < result) ? 2 : 3,
         nac_type: sendHeader[0].nac_type,
         source: sendHeader[0].source,
         sourceDate: sendHeader[0].sourceDate,
@@ -686,17 +689,22 @@ export default function Nac_Main() {
       swal("แจ้งเตือน", 'กรุณาระบุ (ผู้ส่งมอบ/ชื่อ-นามสกุล ผู้ส่งมอบ)', "error")
     } else if ((serviceList.filter((res) => !res.assetsCode)[0]) !== undefined) {
       swal("แจ้งเตือน", 'กรุณาระบุข้อมูลทรัพย์สินให้ครบ', "error")
-    } else if ((serviceList.filter((res) => res.priceSeals === null)[0]) !== undefined) {
-      swal("แจ้งเตือน", 'กรุณาระบุราคาขาย', "error")
     }
-    else if (approveData.filter((res) => res.approverid === data.UserCode && res.status === 1)[0]) {
+    // else if ((serviceList.filter((res) => res.priceSeals === null)[0]) !== undefined  && sendHeader[0].status !=1) {
+    //   swal("แจ้งเตือน", 'กรุณาระบุราคาขาย', "error")
+    // }
+    else if (approveData.find((res) => (res.approverid === data.UserCode) && res.status === 1)) {
       swal("แจ้งเตือน", `${data.UserCode} ทำรายการไปแล้ว`, "error")
-    } else if (approveData.filter((res) => res.approverid === data.UserCode && res.status === 0)[0] || permission_MenuID.indexOf(10) > -1) {
+    } else if (approveData.find((res) => (res.approverid === data.UserCode) && res.status === 0) || permission_MenuID.indexOf(10) > -1) {
       // รอใส่เงือนไข
       const reqUpdateStatus = {
         usercode: data.UserCode,
         nac_code: nac_code,
-        nac_status: approveData.filter((res) => (res.approverid === data.UserCode) && res.status === 0 && (res.limitamount < result)).length > 1 ? 2 : 3,
+        nac_status: approveData.find(
+          res => res.workflowlevel != 0 && res.limitamount < result
+            && (res.approverid === data.UserCode)
+            && res.status == 0
+        ) ? 2 : 3,
         nac_type: sendHeader[0].nac_type,
         source: sendHeader[0].source,
         sourceDate: sendHeader[0].sourceDate,
@@ -1042,29 +1050,35 @@ export default function Nac_Main() {
       })
 
     // กำหนด DTL
+    // กำหนด DTL
     await Axios.post(config.http + '/store_FA_control_select_dtl', { nac_code: nac_code }, { headers })
       .then((res) => {
-
+        console.log(res.data.data);
         setServiceList(res.data.data.map((resData) => {
+          const priceSeals = resData.nacdtl_PriceSeals ?? 0; // Set to 0 if null or undefined
+          const excludingVat = priceSeals ? (priceSeals * 100) / 107 : 0;
+          const profit = excludingVat - resData.nacdtl_bookV;
+
           return {
-            dtl_id: resData.nacdtl_id
-            , assetsCode: resData.nacdtl_assetsCode
-            , serialNo: resData.nacdtl_assetsSeria
-            , name: resData.nacdtl_assetsName
-            , price: resData.nacdtl_assetsPrice
-            , asset_id: resData.nacdtl_id
-            , bookValue: resData.nacdtl_bookV === null ? null : resData.nacdtl_bookV
-            , priceSeals: resData.nacdtl_PriceSeals ?? 0
-            , excluding_vat: resData.nacdtl_PriceSeals ? (resData.nacdtl_PriceSeals * 100) / 107 : 0
-            , profit: (resData.nacdtl_PriceSeals ? (resData.nacdtl_PriceSeals * 100) / 107 : 0) - resData.nacdtl_bookV
-            , date_asset: resData.nacdtl_date_asset
-            , image_1: resData.nacdtl_image_1 ?? null
-            , image_2: resData.nacdtl_image_2 ?? null
+            dtl_id: resData.nacdtl_id,
+            assetsCode: resData.nacdtl_assetsCode,
+            serialNo: resData.nacdtl_assetsSeria,
+            name: resData.nacdtl_assetsName,
+            price: resData.nacdtl_assetsPrice,
+            asset_id: resData.nacdtl_id,
+            bookValue: resData.nacdtl_bookV === null ? null : resData.nacdtl_bookV,
+            priceSeals: priceSeals, // Updated line
+            excluding_vat: excludingVat,
+            profit: profit,
+            date_asset: resData.nacdtl_date_asset,
+            image_1: resData.nacdtl_image_1 ?? null,
+            image_2: resData.nacdtl_image_2 ?? null
           };
-        }))
-      }).catch(function (error) {
-        console.log(error.response);
+        }));
       })
+      .catch(function (error) {
+        console.log(error.response);
+      });
 
     // กำหนด Headers
     await Axios.post(config.http + '/store_FA_control_select_headers', { nac_code: nac_code }, { headers })

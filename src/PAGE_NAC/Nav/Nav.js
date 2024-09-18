@@ -438,7 +438,7 @@ export default function Account_BrnachAssets({ drawerWidth, AppBar, DrawerHeader
                         open={Boolean(anchorEl)}
                         onClose={handleClose}
                       >
-                        <MenuItem disabled={data.DepCode === '101ITO' ? false : true} onClick={() => navigate(`/Permission_NAC`)}>
+                        <MenuItem disabled={data.depcode === '101ITO' ? false : true} onClick={() => navigate(`/Permission_NAC`)}>
                           <ListItemIcon sx={{ minWidth: '15% !important' }}>
                             <ManageAccountsIcon />
                           </ListItemIcon>

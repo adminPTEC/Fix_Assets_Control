@@ -19,7 +19,7 @@ const useStyles = makeStyles((theme) => ({
     height: '100vh',
   },
   image: {
-    backgroundImage: 'url(http://vpnptec.dyndns.org:10280/OPS_Fileupload/ATT_220300007.jpg)',
+    backgroundImage: 'url(http://vpnptec.dyndns.org:10280/OPS_Fileupload/ATT_240900652.jpg)',
     backgroundSize: 'cover',
   },
   paper: {

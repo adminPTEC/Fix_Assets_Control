@@ -209,7 +209,7 @@ export default function History_of_assets() {
             field: col[i],
             width: 80,
           };
-        } else if (col[i] === 'Code' || col[i] === 'Name' || col[i] === 'Asset_group' || col[i] === 'Group_name' || col[i] === 'Details') {
+        } else if (col[i] === 'Code' || col[i] === 'SerialNo' || col[i] === 'Name' || col[i] === 'Asset_group' || col[i] === 'Group_name' || col[i] === 'Details') {
           arrayField[i] = {
             field: col[i],
             width: 160,
@@ -245,25 +245,31 @@ export default function History_of_assets() {
   };
 
   const handleSubmitXlsx = async () => {
+    const expectedFields = [
+      'Code',
+      'Name',
+      'OwnerCode',
+      'Asset_group',
+      'Group_name',
+      'BranchID',
+      'SerialNo',
+      'Price',
+      'CreateDate',
+      'CreateBy',
+      'Position',
+      'Details',
+      'TypeGroup',
+    ];
+    // Extract the field names from the field array
+    const actualFields = field.map(f => f.field);
+    // Find the missing fields
+    const missingFields = expectedFields.filter(expectedField => !actualFields.includes(expectedField));
+
     const headers = {
       'Authorization': 'application/json; charset=utf-8',
       'Accept': 'application/json'
     };
-    if (
-      field[0].field === 'Code' &&
-      field[1].field === 'Name' &&
-      field[2].field === 'OwnerCode' &&
-      field[3].field === 'Asset_group' &&
-      field[4].field === 'Group_name' &&
-      field[5].field === 'BranchID' &&
-      field[6].field === 'SerialNo' &&
-      field[7].field === 'Price' &&
-      field[8].field === 'CreateDate' &&
-      field[9].field === 'CreateBy' &&
-      field[10].field === 'Position' &&
-      field[11].field === 'Details' &&
-      field[12].field === 'TypeGroup'
-    ) {
+    if (missingFields.length === 0) {
       await Axios.post(config.http + '/FA_Control_BPC_Running_NO', data, { headers })
         .then(async (resTAB) => {
           for (let i = 0; i < dataFile.length; i++) {
@@ -328,7 +334,7 @@ export default function History_of_assets() {
           }
         })
     } else {
-      swal("แจ้งเตือน", 'ข้อมูล (Columns) ไม่ถูกต้อง กรุณาตรวจสอบ', "error")
+      swal("แจ้งเตือน", `Columns Missing fields: ${missingFields}`, "error")
     }
   };
 
@@ -831,36 +837,38 @@ export default function History_of_assets() {
               <DialogContent>
                 {
                   !arraySubmit ?
-                    <StripedDataGrid
-                      sx={{
-                        mt: 1,
-                        pl: 2,
-                        pr: 2,
-                        pt: 2,
-                        boxShadow: 1,
-                        [`& .${gridClasses.cell}`]: {
-                          py: 1,
-                        },
-                      }}
-                      components={{ Toolbar: GridToolbar }}
-                      componentsProps={{
-                        toolbar: {
-                          csvOptions: {
-                            utf8WithBom: true,
-                            fileName: `ทะเบียนทรัพย์สินทั้งหมด`,
+                    <Box sx={{ width: '100%', }}>
+                      <StripedDataGrid
+                        sx={{
+                          mt: 1,
+                          pl: 2,
+                          pr: 2,
+                          pt: 2,
+                          boxShadow: 1,
+                          [`& .${gridClasses.cell}`]: {
+                            py: 1,
+                          },
+                        }}
+                        components={{ Toolbar: GridToolbar }}
+                        componentsProps={{
+                          toolbar: {
+                            csvOptions: {
+                              utf8WithBom: true,
+                              fileName: `ทะเบียนทรัพย์สินทั้งหมด`,
 
+                            }
                           }
-                        }
-                      }}
-                      rows={dataFile}
-                      columns={field}
-                      getRowId={(row) => row?.Code}
-                      pageSize={10}
-                      autoHeight
-                      disableColumnMenu
-                      disableSelectionOnClick
-                      {...other}
-                    />
+                        }}
+                        rows={dataFile}
+                        columns={field}
+                        getRowId={(row) => row?.Code}
+                        pageSize={10}
+                        autoHeight
+                        disableColumnMenu
+                        disableSelectionOnClick
+                        {...other}
+                      />
+                    </Box>
                     :
                     <Box
                       sx={{

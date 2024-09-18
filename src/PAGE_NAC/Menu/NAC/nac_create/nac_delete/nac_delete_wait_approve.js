@@ -669,14 +669,18 @@ export default function Nac_Main() {
       swal("แจ้งเตือน", 'กรุณาระบุ (ผู้ส่งมอบ/ชื่อ-นามสกุล ผู้ส่งมอบ)', "error")
     } else if ((serviceList.filter((res) => !res.assetsCode)[0]) !== undefined) {
       swal("แจ้งเตือน", 'กรุณาระบุข้อมูลทรัพย์สินให้ครบ', "error")
-    } else if (approveData.filter((res) => res.approverid === data.UserCode && res.status === 1)[0]) {
+    } else if (approveData.find((res) => (res.approverid === data.UserCode) && res.status === 1)) {
       swal("แจ้งเตือน", `${data.UserCode} ทำรายการไปแล้ว`, "error")
-    } else if (approveData.filter((res) => res.approverid === data.UserCode && res.status === 0)[0] || permission_MenuID.indexOf(10) > -1) {
+    } else if (approveData.find((res) => (res.approverid === data.UserCode) && res.status === 0)[0] || permission_MenuID.indexOf(10) > -1) {
       // รอใส่เงือนไข
       const reqUpdateStatus = {
         usercode: data.UserCode,
         nac_code: nac_code,
-        nac_status: approveData.filter((res) => (res.approverid === data.UserCode) && res.status === 0 && (res.limitamount < result)).length > 1 ? 2 : 3,
+        nac_status: approveData.find(
+          res => res.workflowlevel != 0 && res.limitamount < result
+            && (res.approverid === data.UserCode)
+            && res.status == 0
+        ) ? 2 : 3,
         nac_type: sendHeader[0].nac_type,
         source: sendHeader[0].source,
         sourceDate: sendHeader[0].sourceDate,

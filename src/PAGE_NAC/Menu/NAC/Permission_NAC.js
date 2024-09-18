@@ -316,7 +316,7 @@ export default function Permission_NAC() {
 
   }
 
-  if (data.DepCode == ('101ITO' || 'ITO')) {
+  if (data.depcode == ('101ITO' || 'ITO')) {
     return (
       <ThemeProvider theme={theme}>
         <Container component="main" maxWidth="lg" sx={{ pt: 3, pb: 3 }}>
