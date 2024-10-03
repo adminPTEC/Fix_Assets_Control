@@ -236,12 +236,12 @@ export default function Nac_Main() {
     return (a ? a : 0) + (b ? b : 0)
   })
 
-  const price_seals = serviceList.map(function (elt) {
-    return (/^\d+\.\d+$/.test(elt.priceSeals) || /^\d+$/.test(elt.priceSeals)) ?
-      parseFloat(elt.priceSeals) : parseFloat(elt.priceSeals);
-  }).reduce(function (a, b) { // sum all resulting numbers
-    return (a ? a : 0) + (b ? b : 0)
+  const price_seals = serviceList
+  .map(elt => {
+    const price = parseFloat(elt.priceSeals) || 0; // Parse priceSeals or default to 0 if NaN or null
+    return isNaN(price) ? 0 : price; // Ensure price is a valid number, otherwise default to 0
   })
+  .reduce((a, b) => a + b, 0); // Sum all valid numbers
 
   const profit_seals = serviceList.map(function (elt) {
     return (/^\d+\.\d+$/.test(((elt.priceSeals * 100) / 107) - (elt.bookValue ? elt.bookValue : 0)) || /^\d+$/.test(((elt.priceSeals * 100) / 107) - (elt.bookValue ? elt.bookValue : 0))) ?
@@ -516,9 +516,11 @@ export default function Nac_Main() {
     // else if (serviceList.filter((res) => !res.priceSeals)[0] && sendHeader[0].status !=1) {
     //   swal("แจ้งเตือน", 'กรุณาระบุราคาขาย', "error")
     // } 
-    else if ((serviceList.filter((res) => !res.image_1)[0]) !== undefined) {
-      swal("แจ้งเตือน", 'กรุณาใส่รูปภาพทรัพย์สิน', "error")
-    }
+
+    // else if ((serviceList.filter((res) => !res.image_1)[0]) !== undefined) {
+    //   swal("แจ้งเตือน", 'กรุณาใส่รูปภาพทรัพย์สิน', "error")
+    // }
+
     else {
       // รอใส่เงือนไข
       const reqUpdateStatus = {
@@ -701,10 +703,10 @@ export default function Nac_Main() {
         usercode: data.UserCode,
         nac_code: nac_code,
         nac_status: approveData.find(
-          res => res.workflowlevel != 0 && res.limitamount < result
+          res => res.workflowlevel != 0 && res.limitamount >= result
             && (res.approverid === data.UserCode)
             && res.status == 0
-        ) ? 2 : 3,
+        ) ? 3 : 2,
         nac_type: sendHeader[0].nac_type,
         source: sendHeader[0].source,
         sourceDate: sendHeader[0].sourceDate,
@@ -861,10 +863,11 @@ export default function Nac_Main() {
         usercode: data.UserCode,
         nac_code: nac_code,
         nac_status:
-          (sendHeader[0].nac_status === 12 && ((sendHeader[0].real_price < price_seals) || (sendHeader[0].real_price === 0 && price_seals === 0))) ? 99 :
-            (sendHeader[0].nac_status === 12 && sendHeader[0].real_price >= price_seals) ? 15 :
-              sendHeader[0].nac_status === 15 ? 13 :
-                sendHeader[0].nac_status === 13 ? 6 : null,
+          (sendHeader[0].nac_status === 12 && sendHeader[0].real_price < price_seals) ? 99 :  // If nac_status is 3 and real_price is less than price_seals, set to 99
+          (sendHeader[0].nac_status === 12 && sendHeader[0].real_price >= price_seals) ? 15 :  // If nac_status is 3 and real_price is greater than or equal to price_seals, set to 15
+          (sendHeader[0].nac_status === 15 && sendHeader[0].realPrice_Date) ? 13 :          // If nac_status is 15 and realPrice_Date exists, set to 13
+          (sendHeader[0].nac_status === 13 && sendHeader[0].realPrice_Date) ? 6 :           // If nac_status is 13 and realPrice_Date exists, set to 6
+          sendHeader[0].nac_status,
         nac_type: sendHeader[0].nac_type,
         source: sendHeader[0].source,
         sourceDate: sendHeader[0].sourceDate,
@@ -892,7 +895,7 @@ export default function Nac_Main() {
                 (sendHeader[0].nac_status === 12 && sendHeader[0].real_price < price_seals && price_seals !== '0') ? 'กรอกราคาที่ขายได้เรียบร้อย' :
                   (sendHeader[0].nac_status === 12 && sendHeader[0].real_price < price_seals && price_seals === '0') ? 'เนื่องจากราคาขายคือ 0 จึงทำให้ประเภทการเปลี่ยนแปลงเปลี่ยนเป็น ตัดบัญชีทรัพย์สิน' :
                     sendHeader[0].nac_status === 15 ? 'บัญชีตรวจสอบรายการ' :
-                      sendHeader[0].nac_status === 13 ? 'ปิดรายการ' : null,
+                      sendHeader[0].nac_status === 13 ? 'ปิดรายการ' : sendHeader[0].nac_status,
             })
             if (res.data.data[0].nac_status === 6) {
               for (var i = 0; i < serviceList.length; i++) {

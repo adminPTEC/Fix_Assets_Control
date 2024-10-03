@@ -664,10 +664,10 @@ export default function Nac_Main() {
         usercode: data.UserCode,
         nac_code: nac_code,
         nac_status: approveData.find(
-          res => res.workflowlevel != 0 && res.limitamount < result
+          res => res.workflowlevel != 0 && res.limitamount >= result
             && (res.approverid === data.UserCode)
             && res.status == 0
-        ) ? 2 : 3,
+        ) ? 3 : 2,
         nac_type: sendHeader[0].nac_type,
         source: sendHeader[0].source,
         sourceDate: sendHeader[0].sourceDate,
@@ -849,12 +849,13 @@ export default function Nac_Main() {
   }
 
   const handleSubmit_Form = async () => {
-    if ((sendHeader[0].nac_status === 4 || sendHeader[0].nac_status === 14)
-      && serviceList.filter((res) => res.statusCheck === 0
-        || !res.image_1 || !res.image_2
-      )[0]) {
-      swal("แจ้งเตือน", `เลือก (ตรวจสอบ/รูปภาพ) ทรัพย์สิน`, "error")
-    } else if (
+    // if ((sendHeader[0].nac_status === 4 || sendHeader[0].nac_status === 14)
+    //   && serviceList.filter((res) => res.statusCheck === 0
+    //     || !res.image_1 || !res.image_2
+    //   )[0]) {
+    //   swal("แจ้งเตือน", `เลือก (ตรวจสอบ/รูปภาพ) ทรัพย์สิน`, "error")
+    // } else 
+    if (
       (!sendHeader[0].des_delivery || !desName || !desLastName)
       && (sendHeader[0].nac_status === 4 || sendHeader[0].nac_status === 8 || sendHeader[0].nac_status === 14)
     ) {
